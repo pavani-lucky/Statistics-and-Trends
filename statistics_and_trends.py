@@ -1,3 +1,10 @@
+"""
+Statistics and Trends Assignment
+
+This script processes a dataset, performs statistical analysis, 
+and generates relational, categorical, and statistical plots.
+"""
+
 import os
 import pandas as pd
 import numpy as np
@@ -8,14 +15,16 @@ import scipy.stats as ss
 
 def load_data():
     """
-    Loads the dataset from 'Data.csv'.
-    
+    Loads the dataset from 'Data.csv'. Checks if the file exists before loading.
+
     Returns:
     pd.DataFrame: The loaded dataset.
     """
-    file_path = "Data.csv"  # Adjust path if needed
+    file_path = "Data.csv"  # Ensure this is the correct filename
+
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Dataset not found: {file_path}")
+        print(f"Error: Dataset not found at {file_path}. Please upload 'Data.csv'.")
+        exit(1)  # Stops execution if file is missing
 
     df = pd.read_csv(file_path)
     return df
@@ -126,23 +135,23 @@ def main():
     """
     Main function to execute data processing, visualization, and analysis.
     """
-    try:
-        df = load_data()
-        df = preprocessing(df)
+    df = load_data()
+    df = preprocessing(df)
 
-        col = df.columns[0]  # Change this to analyze a different column
+    # Choose a numerical column for statistical analysis
+    numerical_columns = df.select_dtypes(include=['number']).columns.tolist()
+    if not numerical_columns:
+        print("Error: No numerical columns found for analysis.")
+        exit(1)
 
-        plot_relational_plot(df)
-        plot_categorical_plot(df)
-        plot_statistical_plot(df)
+    col = numerical_columns[0]  # Select the first numerical column
 
-        moments = statistical_analysis(df, col)
-        writing(moments, col)
+    plot_relational_plot(df)
+    plot_categorical_plot(df)
+    plot_statistical_plot(df)
 
-    except FileNotFoundError as e:
-        print(e)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    moments = statistical_analysis(df, col)
+    writing(moments, col)
 
 
 if __name__ == '__main__':
