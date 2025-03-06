@@ -22,7 +22,8 @@ def load_data():
         return df
     except Exception as e:
         print(
-            f"Error reading file: {e}. Please ensure the file is correctly formatted."
+            f"Error reading file: {e}.\
+            Please ensure the file is correctly formatted."
         )
         exit(1)
 
