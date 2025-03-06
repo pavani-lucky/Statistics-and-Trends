@@ -22,6 +22,10 @@ def load_data():
     """
     file_path = "Data.csv"  # Ensure this is the correct filename
 
+    # Debugging: Check if the file exists
+    print("Current Directory:", os.getcwd())  # Show current working directory
+    print("Files in Directory:", os.listdir())  # Show all available files
+
     if not os.path.exists(file_path):
         print(f"Error: Dataset not found at {file_path}. Please upload 'Data.csv'.")
         exit(1)  # Stops execution if file is missing
