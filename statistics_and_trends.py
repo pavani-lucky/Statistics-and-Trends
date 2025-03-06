@@ -1,10 +1,3 @@
-"""
-Statistics and Trends Assignment
-
-This script processes a dataset, performs statistical analysis, 
-and generates relational, categorical, and statistical plots.
-"""
-
 import os
 import pandas as pd
 import numpy as np
@@ -14,40 +7,33 @@ import scipy.stats as ss
 
 
 def load_data():
-    """
-    Loads the dataset from 'Data.csv'. Checks if the file exists before loading.
+    current_directory = os.getcwd()
+    
+    filename = "data.csv"
 
-    Returns:
-    pd.DataFrame: The loaded dataset.
-    """
-    file_path = "Data.csv"  # Ensure this is the correct filename
-
-    # Debugging: Check if the file exists
-    print("Current Directory:", os.getcwd())  # Show current working directory
-    print("Files in Directory:", os.listdir())  # Show all available files
-
+    file_path = os.path.join(current_directory, filename)
+    
     if not os.path.exists(file_path):
-        print(f"Error: Dataset not found at {file_path}. Please upload 'Data.csv'.")
-        exit(1)  # Stops execution if file is missing
+        print(f"Error: Dataset not found at {file_path}. Please upload '{filename}' to the current directory.")
+        exit(1)  
 
-    df = pd.read_csv(file_path)
-    return df
+    try:
+        df = pd.read_csv(file_path)
+        return df 
+    except Exception as e:
+        print(f"Error reading file: {e}. Please ensure the file is correctly formatted.")
+        exit(1)
 
 
 def preprocessing(df):
-    """
-    Preprocesses the dataset by handling missing values and renaming columns.
+    df.columns = [col.strip().replace(" ", "_").lower() for col in df.columns]  
 
-    Parameters:
-    df (pd.DataFrame): The raw dataset.
-
-    Returns:
-    pd.DataFrame: The cleaned dataset.
-    """
-    df = df.dropna()  # Remove missing values
-    df.columns = [col.strip().replace(" ", "_").lower() for col in df.columns]  # Standardize column names
-
-    # Display basic dataset information
+    if df.isnull().sum().any():
+        print("\nMissing values detected:")
+        print(df.isnull().sum())
+        print("Dropping rows with missing values.")
+        df = df.dropna() 
+    
     print("\nDataset Info:\n", df.info())
     print("\nFirst Few Rows:\n", df.head())
     print("\nSummary Statistics:\n", df.describe())
@@ -56,56 +42,53 @@ def preprocessing(df):
 
 
 def plot_relational_plot(df):
-    """
-    Generates a scatter plot for two numerical variables.
-    Saves as 'relational_plot.png'.
-    """
+    numerical_cols = df.select_dtypes(include=np.number).columns.tolist()
+    if len(numerical_cols) < 2:
+        print("Error: Not enough numerical columns for a scatter plot.")
+        return
+    
+    x_col, y_col = numerical_cols[0], numerical_cols[1]
+
     plt.figure(figsize=(8, 5))
-    sns.scatterplot(x=df[df.columns[0]], y=df[df.columns[1]])
-    plt.xlabel(df.columns[0])
-    plt.ylabel(df.columns[1])
-    plt.title(f"Scatter Plot: {df.columns[0]} vs {df.columns[1]}")
+    sns.scatterplot(x=df[x_col], y=df[y_col])
+    plt.xlabel(x_col)
+    plt.ylabel(y_col)
+    plt.title(f"Scatter Plot: {x_col} vs {y_col}")
     plt.savefig('relational_plot.png')
     plt.show()
 
 
 def plot_categorical_plot(df):
-    """
-    Generates a bar chart for a categorical column.
-    Saves as 'categorical_plot.png'.
-    """
+    categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    if not categorical_cols:
+        print("Error: No categorical columns found for a bar chart.")
+        return
+
+    cat_col = categorical_cols[0]
+
     plt.figure(figsize=(8, 5))
-    df[df.columns[2]].value_counts().plot(kind='bar', color='skyblue')
-    plt.xlabel(df.columns[2])
+    df[cat_col].value_counts().plot(kind='bar', color='skyblue')
+    plt.xlabel(cat_col)
     plt.ylabel("Count")
-    plt.title(f"Bar Chart of {df.columns[2]}")
+    plt.title(f"Bar Chart of {cat_col}")
     plt.savefig('categorical_plot.png')
     plt.show()
 
 
 def plot_statistical_plot(df):
-    """
-    Generates a correlation heatmap for numerical variables.
-    Saves as 'statistical_plot.png'.
-    """
+    numerical_columns = df.select_dtypes(include=['number']).columns.tolist()
+    if not numerical_columns:
+        print("Error: No numerical columns found for correlation heatmap.")
+        return
+
     plt.figure(figsize=(10, 6))
-    sns.heatmap(df.corr(), annot=True, cmap="coolwarm", linewidths=0.5)
+    sns.heatmap(df[numerical_columns].corr(), annot=True, cmap="coolwarm", linewidths=0.5)
     plt.title("Correlation Heatmap")
     plt.savefig('statistical_plot.png')
     plt.show()
 
 
 def statistical_analysis(df, col):
-    """
-    Computes key statistical moments for a numerical column.
-
-    Parameters:
-    df (pd.DataFrame): The dataset.
-    col (str): The column name for analysis.
-
-    Returns:
-    tuple: Mean, Standard Deviation, Skewness, Excess Kurtosis.
-    """
     mean = df[col].mean()
     stddev = df[col].std()
     skew = df[col].skew()
@@ -115,20 +98,12 @@ def statistical_analysis(df, col):
 
 
 def writing(moments, col):
-    """
-    Prints statistical analysis results in a formatted manner.
-
-    Parameters:
-    moments (tuple): Mean, Std Dev, Skewness, Kurtosis.
-    col (str): The column being analyzed.
-    """
     mean, stddev, skew, excess_kurtosis = moments
 
     print(f'\nFor the attribute {col}:')
     print(f'Mean = {mean:.2f}, Standard Deviation = {stddev:.2f}, '
           f'Skewness = {skew:.2f}, Excess Kurtosis = {excess_kurtosis:.2f}.')
 
-    # Interpretation
     skewness_desc = "not skewed" if abs(skew) < 0.5 else ("right-skewed" if skew > 0 else "left-skewed")
     kurtosis_desc = "mesokurtic" if -2 < excess_kurtosis < 2 else ("leptokurtic" if excess_kurtosis > 2 else "platykurtic")
 
@@ -136,19 +111,15 @@ def writing(moments, col):
 
 
 def main():
-    """
-    Main function to execute data processing, visualization, and analysis.
-    """
     df = load_data()
     df = preprocessing(df)
 
-    # Choose a numerical column for statistical analysis
     numerical_columns = df.select_dtypes(include=['number']).columns.tolist()
     if not numerical_columns:
         print("Error: No numerical columns found for analysis.")
         exit(1)
 
-    col = numerical_columns[0]  # Select the first numerical column
+    col = numerical_columns[0]
 
     plot_relational_plot(df)
     plot_categorical_plot(df)
@@ -160,6 +131,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
-    
- 
